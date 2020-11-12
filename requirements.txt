@@ -120,8 +120,6 @@ path.py==11.5.0
 pathlib2==2.3.5
 patsy==0.5.1
 pdfminer.six==20181108
-pdftables-api==1.1.0
-pdftotext==2.1.4
 pep8==1.7.1
 pexpect==4.7.0
 pickleshare==0.7.5
@@ -147,7 +145,6 @@ pylint==1.9.2
 pyodbc==4.0.27
 pyOpenSSL==19.0.0
 pyparsing==2.4.2
-PyPDF2==1.26.0
 pyrsistent==0.15.4
 PySocks==1.7.1
 pytest==4.6.2
