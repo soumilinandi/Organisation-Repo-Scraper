@@ -1,9 +1,14 @@
-from flask import Flask, redirect, url_for, request,render_template
+# https://github.com/search?o=desc&q=user%3Agoogle+&s=forks&type=Repositories
+
+# https://github.com/google/styleguide/graphs/contributors
+
+
 import requests 
 from bs4 import BeautifulSoup 
 from selenium import webdriver 
 from selenium.webdriver.common.keys import Keys 
 import time 
+
 
 ###########################################################################################################
 #  FUNCTION TO GET TOP M COMMITS OF A REPOSITORY
@@ -12,12 +17,9 @@ import time
 #
 #  Input  - url<string> - url passed from organisation repo page
 #         - m<int> - m is number of commitees and commits
-#         - result<string> - string to be printed at end
-#
-#  Output - result<string> - string appended from this function added to result
 #
 ###########################################################################################################
-def getTopCommits(url,m,result):
+def getTopCommits(url,m):
 
     #url is the final modified url that contains list in order of number of commits
     url = url+ "/graphs/contributors"
@@ -55,9 +57,9 @@ def getTopCommits(url,m,result):
         #class wrapping commit number stored in user_commit_no
         user_commit_no = user.find('a',class_="link-gray text-normal")
 
-        #result string appended to user_number counter, user_id, user commit number
-        result = result + str(user_number) + " : " + str(user_id.text) + " : "
-        result = result + str(user_commit_no.text) + "</br>"
+        #print user_number counter, user_id, user commit number
+        print (str(user_number) + " : " + str(user_id.text) + " : ")
+        print (str(user_commit_no.text) + "\n")
         
         #user number counter incremented
         user_number = user_number + 1
@@ -72,9 +74,6 @@ def getTopCommits(url,m,result):
     #close the chrome driver
     driver.close()
 
-    #return the modified result 
-    return result
-
 
 ###########################################################################################################################
 #  FUNCTION TO GET TOP N REPO OF AN ORGANISATION
@@ -85,12 +84,9 @@ def getTopCommits(url,m,result):
 #         - n<int> - n is number of repo
 #         - page<int> - page number on url for every 10 results
 #         - m<int> - m is number of committes and commits
-#         - result<string> - result to be printed at end
-#
-#  Output - result<string> - string appended from this function added to result
 #
 ###########################################################################################################################
-def getTopRepo(organisation,n,page,m,result):
+def getTopRepo(organisation,n,page,m):
 
     #get page by Selenium 
     
@@ -127,12 +123,12 @@ def getTopRepo(organisation,n,page,m,result):
         #repo_link contains url to the repo
         repo_link = "https://github.com"+ str(repo['href'])
 
-        #result is appended with Repo number, repo text 
-        result = result +"</br><strong>"+"Repo " + str(((page-1)*10)+i+1) + " : " + str(repo.text) + "</strong></br>"
-        result = result +  str("Top committes and commit number : </br>")
+        #print Repo number, repo text 
+        print ("\nRepo " + str(((page-1)*10)+i+1) + " : " + str(repo.text) + "\n")
+        print (str("Top committes and commit number : \n"))
 
         #get top m commits and commitees for repo_link for each number in n
-        result = getTopCommits(repo_link,m,result)
+        getTopCommits(repo_link,m)
 
         #increment counter of current repository on current page
         i = i+1
@@ -147,65 +143,23 @@ def getTopRepo(organisation,n,page,m,result):
     #incase number is greater than 10,20,30 and so on, function called recursively accordingly
     #10 repo loaded every time : for n=4, function called 4 times in total    
     if(n>0):
-        #result modified by recurive call
-        result = getTopRepo(organisation,n,page+1,m,result)
+        #output next by recurive call
+        getTopRepo(organisation,n,page+1,m)
 
-    #return final result to display on web browser
-    return result
+##################################################################
+#  MAIN FUNCTION
+##################################################################
+if __name__ == "__main__":
 
-#flask app
-app = Flask(__name__) 
+    #organisation name
+    org_name = raw_input("Enter your Organisation Name : ") 
 
-#######################################################################################
-# FUCTION to redirect to input.html
-#######################################################################################
-@app.route('/')
-def main():
-    return render_template('input.html')
+    #n : number of repo
+    n = input("Enter n : ")
 
-#######################################################################################
-# FUNCTION to redirect on success
-#######################################################################################
-@app.route('/success/<name>/<int:nnum>/<int:mnum>') 
-def success(name,nnum,mnum): 
-    #initalize res as empty
-    res = ""
+    #m : number of committees
+    m = input("Enter m : ")
 
-    #modify res by getTopRepo, 1 is the default starting page number as 1
-    res = getTopRepo(name,nnum,1,mnum,res)
+    #call the functions, page number start is 1 by default
+    getTopRepo(org_name,n,1,m)
 
-    #return res to screen
-    return res
-
-#######################################################################################
-# FUNCTION executed when pressed submit on input.html
-#######################################################################################
-@app.route('/input',methods = ['POST', 'GET']) 
-def input(): 
-
-    #On POST request
-    if request.method == 'POST': 
-        #nm is org name
-        org_name = request.form['nm'] 
-
-        # n1 and nm1 is n
-        n1 = request.form['nm1'] 
-
-        # m1 and nm2 is m
-        m1 = request.form['nm2'] 
-        return redirect(url_for('success',name = org_name,nnum=n1,mnum=m1)) 
-
-    #On GET request
-    else: 
-        #nm is org name
-        user = request.args.get('nm') 
-
-        # n1 and nm1 is n
-        n1 = request.args.get('nm1') 
-
-        # m1 and nm2 is m
-        m1 = request.args.get('nm2') 
-        return redirect(url_for('success',name = org_name,nnum=n1,mnum=m1)) 
-
-if __name__ == '__main__': 
-    app.run(debug = True) 
